@@ -25,18 +25,24 @@ function res = approx_grad(x_pos, y_pos)
     boxb = [R*generic_box_p1+[1;-.7]; R*generic_box_p2+[1;-.7]];
     boxc = [R*generic_box_p1+[-.25;-1]; R*generic_box_p2+[-.25;-1]];
 
-    lines = [walls boxa boxb boxc];
+    lines = [boxa boxb boxc];
 
     v = 0;
     [~, num_lines] = size(lines);
     for u = linspace(0, 1, 50)
         % Potential field for circle
-        v = v + 5*circle_source(x, y, circle, u);
+        v = v + 18*circle_source(x, y, circle, u);
 
         % Potential field for lines
         for i = 1:num_lines
             points = lines(:, i);
             v = v - line_source(x, y, points, u);
+        end
+
+        % Potential Field for walls
+        for i = 1:4
+            points = walls(:, i);
+            v = v + 15*line_source(x, y, points, u);
         end
     end
 
