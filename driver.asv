@@ -73,14 +73,11 @@ while ~shouldStop
     while rostoc(startForward) < forwardTime
         pause(0.01)
     end
-    
     % update the position for the next iteration
     position = position + (gradValue*lambda);
-    
     % if our step is too short, flag it so we break out of our loop
     shouldStop = forwardDistance < 0.01;
 end
-
 % stop the robot before exiting
 msg.Data = [0, 0];
 send(pub, msg);
