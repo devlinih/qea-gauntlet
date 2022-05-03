@@ -1,12 +1,15 @@
 pub = rospublisher('raw_vel');
+
 % Stop the robot if it's going right now
 msg = rosmessage(pub);
 msg.Data = [0, 0];
 send(pub, msg);
 pause(2);
 
+% Set initial position and direction
 position = [0, 0];
 heading = [1, 0];
+
 % Move neato to inital point pointed in positive i-hat direction
 placeNeato(position(0), position(1), heading(0), heading(1));
 pause(2);
