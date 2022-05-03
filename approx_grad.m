@@ -51,6 +51,6 @@ function res = approx_grad(x_pos, y_pos)
     [~,ix] = min(abs(x - x_pos));
     [~,iy] = min(abs(y - y_pos));
 
-    f_grad = [fx(ix,iy) fy(ix,iy)];
+    f_grad = [fx(ix,iy); fy(ix,iy)];
     res = f_grad;
 end
