@@ -7,67 +7,47 @@
 % Define the potential field of the gauntlet (using the pre-defined
 % values)
 
-[x,y] = meshgrid(-2:0.3:3,-4:0.3:2);
+clear
 
-v = 0
+[x,y] = meshgrid(-2:0.1:3,-4:0.1:1.5);
 
-clf
-axis equal
-hold on
+% Params for the circle as column vector of [h; k; r]
+circle = [.75; -2.5; .25];
 
+% Params for the line as matrix. Each column contains endpoints in the
+% format [x1; y1; x2; y2]
+walls = [ 2.5, -1.50, -1.50,  2.50;...
+          1.0,  1.00, -3.37, -3.37;...
+         -1.5, -1.50,  2.50,  2.50;...
+          1.0, -3.37, -3.37,  1.00];
+
+generic_box_p1 = [0.25, -.25, -.25, .25;...
+                  0.25, .25, -.25, -.25];
+generic_box_p2 = [-.25, -.25, .25, .25;...
+                  0.25, -.25, -.25, .25];
+
+theta = pi/4;
+R = [cos(theta), -sin(theta);...
+     sin(theta), cos(theta)];
+
+boxa = [generic_box_p1+[1.41;-2]; generic_box_p2+[1.41;-2]];
+boxb = [R*generic_box_p1+[1;-.7]; R*generic_box_p2+[1;-.7]];
+boxc = [R*generic_box_p1+[-.25;-1]; R*generic_box_p2+[-.25;-1]];
+
+lines = [walls boxa boxb boxc];
+
+v = 0;
+[~, num_lines] = size(lines);
 for u = linspace(0, 1, 50)
-  % Walls
+    % Potential field for circle
+    v = v + 5*circle_source(x, y, circle, u);
 
-  wall1_x = -1.5;
-  wall1_y = 4.37 * u - 3.37;
-
-  wall2_x = 2.5;
-  wall2_y = 4.37 * u - 3.37;
-
-  wall3_x = 4 * u - 1.5;
-  wall3_y = -3.37;
-
-  wall4_x = 4 * u - 1.5;
-  wall4_y = 1;
-
-  % Boxes
-  box1_x = -.25;
-  box1_y = .5 * u - .25;
-  box2_x = .25;
-  box2_y = .5 * u - .25;
-  box3_x = .5 * u - .25;
-  box3_y = -.25;
-  box4_x = .5 * u - .25;
-  box4_y = .25;
-
-  box_generic = [box1_x, box2_x, box3_x, box4_x;...
-                 box1_y, box2_y, box3_y, box4_y];
-
-  boxa = box_generic + [1.41;...
-                        -2];
-
-  angle = pi/4;
-  R = [cos(angle) -sin(angle);...
-       sin(angle) cos(angle)];
-
-  boxb = R * box_generic + [1;...
-                            -.7];
-
-  boxc = R * box_generic + [-.25;...
-                            -1];
-  plot(boxa(1, :), boxa(2, :), 'ko')
-  plot(boxb(1, :), boxb(2, :), 'ko')
-  plot(boxc(1, :), boxc(2, :), 'ko')
-
-  % The barrel
-  theta = 2 * pi * u;
-  barrel = [.25*cos(theta);...
-            .25*sin(theta)];
-  barrel = barrel + [.75;...
-                     -2.5];
-  plot(barrel(1,:), barrel(2,:), 'bo')
+    % Potential field for lines
+    for i = 1:num_lines
+        points = lines(:, i);
+        v = v - line_source(x, y, points, u);
+    end
 end
-
 
 % Start collecting path data
 
