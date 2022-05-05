@@ -13,6 +13,15 @@ for i = 1:12
     plot([x1 x2], [y1 y2], 'k');
 end
 
+for i = 1:4
+    current_line = walls(:, i);
+    x1 = current_line(1);
+    y1 = current_line(2);
+    x2 = current_line(3);
+    y2 = current_line(4);
+    plot([x1 x2], [y1 y2], 'k');
+end
+
 theta = linspace(0, 2*pi);
 h = circle(1);
 k = circle(2);

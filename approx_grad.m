@@ -31,20 +31,24 @@ function res = approx_grad(x_pos, y_pos)
     [~, num_lines] = size(lines);
     for u = linspace(0, 1, 50)
         % Potential field for circle
-        v = v + 18*circle_source(x, y, circle, u);
+        % v = v - 4*circle_source(x, y, circle, u);
 
-        % Potential field for lines
-        for i = 1:num_lines
-            points = lines(:, i);
-            v = v - line_source(x, y, points, u);
-        end
 
         % Potential Field for walls
         for i = 1:4
-            points = walls(:, i);
-            v = v + 15*line_source(x, y, points, u);
+            % points = walls(:, i);
+            % v = v + line_source(x, y, points, u);
         end
     end
+
+    circ_x = circle(1);
+    circ_y = circle(2);
+    v = v - 10*log(sqrt((x-circ_x).^2 + (y-circ_y).^2));
+
+    % Potential field for boxes
+    v = v + log(sqrt((x-1).^2 + (y+.7).^2));
+    v = v + log(sqrt((x+.25).^2 + (y+1).^2));
+    v = v + log(sqrt((x-1.41).^2 + (y+2).^2));
 
     [fx, fy] = gradient(v);
 

@@ -1,62 +1,96 @@
 % Navigate the gauntlet challenge, level 1
 
-% Collect scan data, do not RANSAC fit it
-
-% collectScans()
-
-% Define the potential field of the gauntlet (using the pre-defined
-% values)
-
 clear
 
-[x,y] = meshgrid(-2:0.1:3,-4:0.1:1.5);
 
-% Params for the circle as column vector of [h; k; r]
-circle = [.75; -2.5; .25];
+% to calculate wheel velocities for a given angular speed we need to know
+% the wheel base of the robot
+wheelBase = 0.235;              % meters
+                                % this is the scaling factor we apply to the gradient when calculating our
+                                % step size
+lambda = 0.1;
 
-% Params for the line as matrix. Each column contains endpoints in the
-% format [x1; y1; x2; y2]
-walls = [ 2.5, -1.50, -1.50,  2.50;...
-          1.0,  1.00, -3.37, -3.37;...
-         -1.5, -1.50,  2.50,  2.50;...
-          1.0, -3.37, -3.37,  1.00];
+% the problem description tells us to the robot starts at position 1, -1
+% with a heading aligned to the y-axis
+heading = [-1; 0];
+position = [0; 0];
 
-generic_box_p1 = [0.25, -.25, -.25, .25;...
-                  0.25, .25, -.25, -.25];
-generic_box_p2 = [-.25, -.25, .25, .25;...
-                  0.25, -.25, -.25, .25];
+angularSpeed = 0.2;  % radians / second (set higher than real to help with testing)
+linearSpeed = 0.2;  % meters / second
 
-theta = pi/4;
-R = [cos(theta), -sin(theta);...
-     sin(theta), cos(theta)];
+% get setup with a publisher so we can modulate the velocity
+pub = rospublisher('/raw_vel');
+msg = rosmessage(pub);
+% stop the robot's wheels in case they are running from before
+msg.Data = [0, 0];
+send(pub, msg);
+pause(2);
 
-boxa = [generic_box_p1+[1.41;-2]; generic_box_p2+[1.41;-2]];
-boxb = [R*generic_box_p1+[1;-.7]; R*generic_box_p2+[1;-.7]];
-boxc = [R*generic_box_p1+[-.25;-1]; R*generic_box_p2+[-.25;-1]];
+% put the Neato in the starting location
+placeNeato(position(1), position(2), heading(1), heading(2));
+% wait a little bit for the robot to land after being positioned
+pause(2);
 
-lines = [boxa boxb boxc];
+% set a flag to control when we are sufficiently close to the maximum of f
+shouldStop = false;
 
+while ~shouldStop
+    % get the gradient
+    gradValue = approx_grad(position(1), position(2));
+    % calculate the angle to turn to align the robot to the direction of
+    % gradValue. There are lots of ways to do this. One way is to use the
+    % fact that the magnitude of the cross product of two vectors is equal
+    % to the product of the vectors' magnitudes times the sine of the angle
+    % between them. Moreover, the direction of the vector will tell us
+    % what axis to turn around to rotate the first vector onto the second.
+    % We'll use that approach here, but contact us for more approaches.
+    crossProd = cross([heading; 0], [gradValue; 0]);
 
-v = 0;
-[~, num_lines] = size(lines);
-for u = linspace(0, 1, 50)
-    % Potential field for circle
-    v = v + 18*circle_source(x, y, circle, u);
+    % if the z-component of the crossProd vector is negative that means we
+    % should be turning clockwise and if it is positive we should turn
+    % counterclockwise
+    turnDirection = sign(crossProd(3));
+    % turnDirection = 1;
 
-    % Potential field for boxes
-    for i = 1:num_lines
-        points = lines(:, i);
-        v = v - 1*line_source(x, y, points, u);
+    % as stated above, we can get the turn angle from the relationship
+    % between the magnitude of the cross product and the angle between the
+    % vectors
+    %turnAngle = asin(norm(crossProd)/(norm(heading)*norm(gradValue)))
+    turnAngle = acos(max(min(dot(heading,gradValue)/(norm(heading)*norm(gradValue)),1),-1));
+    acosd(max(min(dot(heading,gradValue)/(norm(heading)*norm(gradValue)),1),-1))
+
+    % this is how long in seconds to turn for
+    turnTime = double(turnAngle) / angularSpeed;
+    % note that we use the turnDirection here to negate the wheel speeds
+    % when we should be turning clockwise instead of counterclockwise
+    msg.Data = [-turnDirection*angularSpeed*wheelBase/2,
+                turnDirection*angularSpeed*wheelBase/2];
+    send(pub, msg);
+    % record the start time and wait until the desired time has elapsed
+    startTurn = rostic;
+    while rostoc(startTurn) < turnTime
+        pause(0.01);
     end
+    heading = gradValue;
 
-    % Potential field for lines
-    for i = 1:4
-        points = walls(:, i);
-        v = v + 15*line_source(x, y, points, u);
+    % this is how far we are going to move
+    forwardDistance = norm(gradValue*lambda);
+    % this is how long to take to move there based on desired linear speed
+    forwardTime = forwardDistance / linearSpeed;
+    % start the robot moving
+    msg.Data = [linearSpeed, linearSpeed];
+    send(pub, msg);
+    % record the start time and wait until the desired time has elapsed
+    startForward = rostic;
+    while rostoc(startForward) < forwardTime
+        pause(0.01)
     end
-
+    % update the position for the next iteration
+    position = position + (gradValue*lambda);
+    % if our step is too short, flag it so we break out of our loop
+    shouldStop = forwardDistance < 0.01;
 end
 
-% Start collecting path data
-
-% Follow gradient descent based on potential field
+% stop the robot before exiting
+msg.Data = [0, 0];
+send(pub, msg);
