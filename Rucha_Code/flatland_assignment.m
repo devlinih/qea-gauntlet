@@ -4,7 +4,7 @@ function position = flatland_assignment()
 wheelBase = 0.235;              % meters
 % this is the scaling factor we apply to the gradient when calculating our
 % step size
-lambda = 0.1;
+lambda = 0.01;
 
 % setup symbolic expressions for the function and gradient
 syms x y;
@@ -12,26 +12,26 @@ syms x y;
 f = 20*(log(sqrt((x-0.75).^2 + (y + 2.5).^2))) - 2*log(sqrt((x+0.25).^2 + (y+1).^2)) - 0.2*log(sqrt((x-1).^2 + (y+0.7).^2)) - 2*log(sqrt((x-1.41).^2 + (y+2).^2));
 
 % define sources at lines for walls
-for a = -1.5:0.01:2.5
-    f = f - 0.05*log(sqrt((x-a).^2 + (y-1).^2));
-    f = f - 0.05*log(sqrt((x-a).^2 + (y+3.37).^2));
-end
-
-for b = -3.37:0.01:1
-    f = f - 0.05*log(sqrt((x+1.5).^2 + (y-b).^2));
-    f = f - 0.05*log(sqrt((x-2.5).^2 + (y-b).^2));
-end
+% for a = -1.5:0.01:2.5
+%     f = f - 0.05*log(sqrt((x-a).^2 + (y-1).^2));
+%     f = f - 0.05*log(sqrt((x-a).^2 + (y+3.37).^2));
+% end
+% 
+% for b = -3.37:0.01:1
+%     f = f - 0.05*log(sqrt((x+1.5).^2 + (y-b).^2));
+%     f = f - 0.05*log(sqrt((x-2.5).^2 + (y-b).^2));
+% end
 
 grad = gradient(f, [x, y]);
 
 % the problem description tells us to the robot starts at position 1, -1
 % with a heading aligned to the y-axis
-heading = [0; 1];
+heading = [1; 0];
 %position = [0; +2];
-position = [1; -1];
+position = [0; 0];
 
 angularSpeed = 0.2;  % radians / second (set higher than real to help with testing)
-linearSpeed = 0.75;  % meters / second
+linearSpeed = 0.2;  % meters / second
 
 % get setup with a publisher so we can modulate the velocity
 pub = rospublisher('/raw_vel');
@@ -47,11 +47,11 @@ placeNeato(position(1), position(2), heading(1), heading(2));
 pause(2);
 
 % set a flag to control when we are sufficiently close to the maximum of f
-shouldStop = false;
+startime = rostic;
 
-while ~shouldStop
+while rostoc(startime) < 19.1
     % get the gradient
-    gradValue = -double(subs(grad, {x, y}, {position(1), position(2)}));
+    gradValue = -1*double(subs(grad, {x, y}, {position(1), position(2)}));
     % calculate the angle to turn to align the robot to the direction of
     % gradValue. There are lots of ways to do this. One way is to use the
     % fact that the magnitude of the cross product of two vectors is equal
@@ -100,7 +100,6 @@ while ~shouldStop
     % update the position for the next iteration
     position = position + (gradValue*lambda);
     % if our step is too short, flag it so we break out of our loop
-    shouldStop = forwardDistance < 0.01;
 end
 
 % stop the robot before exiting
