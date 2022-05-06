@@ -16,7 +16,7 @@ pause(2);
 
 % Constants:
 wheelBase = 0.235;
-lambda = 0.001;
+lambda = 0.01;
 angularSpeed = 0.2;  % radians / second (set higher than real to help with testing)
 linearSpeed = 0.25;  % meters / second
 
