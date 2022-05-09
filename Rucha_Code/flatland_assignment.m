@@ -9,7 +9,7 @@ lambda = 0.01;
 % setup symbolic expressions for the function and gradient
 syms x y;
 
-f = 20*(log(sqrt((x-0.75).^2 + (y + 2.5).^2))) - 2*log(sqrt((x+0.25).^2 + (y+1).^2)) - 0.2*log(sqrt((x-1).^2 + (y+0.7).^2)) - 2*log(sqrt((x-1.41).^2 + (y+2).^2));
+f = 20*(log(sqrt((x-0.75).^2 + (y + 2.5).^2))) - 2*log(sqrt((x+0.25).^2 + (y+1).^2)) - 0.4*log(sqrt((x-1).^2 + (y+0.7).^2)) - 2.5*log(sqrt((x-1.41).^2 + (y+2).^2));
 
 % define sources at lines for walls
 % for a = -1.5:0.01:2.5
