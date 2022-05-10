@@ -39,7 +39,7 @@ num_vec = 7;
 stop_gaps = round(length(encoder_v) / num_vec);
 current_vec = 1;
 
-for i = 1:153
+for i = 1:length(diff_encoder_time)
     position(:,i+1) = position(:,i) + (heading(:,i) .* encoder_v(i) .* diff_encoder_time(i));
     % Rotate the heading
     theta = encoder_omega(i) * diff_encoder_time(i);
@@ -60,3 +60,8 @@ plot(position(1,:), position(2,:), 'b--', 'LineWidth', 2.0)
 
 xlabel("X Position (Meters)",'FontSize', 30)
 ylabel("Y Position (Meters)",'FontSize', 30)
+
+x_deltas = diff(position(1,:));
+y_deltas = diff(position(2,:));
+step_sizes = sqrt(x_deltas.^2 + y_deltas.^2);
+distance = sum(step_sizes)
