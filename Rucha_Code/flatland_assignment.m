@@ -1,4 +1,7 @@
-function position = flatland_assignment()
+function scan_data = flatland_assignment()
+
+sub = rossubscriber('/scan');
+
 % to calculate wheel velocities for a given angular speed we need to know
 % the wheel base of the robot
 wheelBase = 0.235;              % meters
@@ -49,7 +52,17 @@ pause(2);
 % set a flag to control when we are sufficiently close to the maximum of f
 startime = rostic;
 
+% Initialise the return variable
+scan_data = []
+
 while rostoc(startime) < 19.1
+    
+    sample_num = size(scan_data, 2)
+    scan_message = receive(sub);
+    radius = scan_message.Ranges(1:end-1);
+    scan_data(:,sample_num+1) = [position; heading; radius]
+
+
     % get the gradient
     gradValue = -1*double(subs(grad, {x, y}, {position(1), position(2)}));
     % calculate the angle to turn to align the robot to the direction of
