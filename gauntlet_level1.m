@@ -1,4 +1,4 @@
-function scan_data = flatland_assignment()
+function scan_data = gauntlet_level1()
 
 sub = rossubscriber('/scan');
 
@@ -57,10 +57,10 @@ scan_data = []
 
 while rostoc(startime) < 19.1
     
-    sample_num = size(scan_data, 2)
+    sample_num = size(scan_data, 2);
     scan_message = receive(sub);
     radius = scan_message.Ranges(1:end-1);
-    scan_data(:,sample_num+1) = [position; heading; radius]
+    scan_data(:,sample_num+1) = [position; heading; radius];
 
 
     % get the gradient
